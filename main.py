@@ -209,6 +209,12 @@ class SavingsNecessity(discord.ui.View):
 
 
 
+"""ESKOM LOAD SHEDDING UPDATES"""
+
+#START HERE
+
+
+
 
 @bot.event
 async def on_ready():
@@ -225,15 +231,21 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    #channel_id = message.channel.id
-
     msg = message.content
-    if msg[0] == "!": 
-        await bot.process_commands(message)
+    if msg == "!finance" or msg == "!savings":
+        channel_id = message.channel.id
+        finance_channel = s.FINANCE_ID
+        if channel_id == finance_channel:
+            await bot.process_commands(message)
+        else:
+            channel = message.channel
+            channel_name = message.channel.name
+            channel.send(f"🚫 Oops! You're trying to run finance commands in **{channel_name}**. Please head over to the 💰 **#finance** channel to use finance commands.")
+
 
 
 @bot.command()
-async def finance(ctx):
+async def transact(ctx):
     view=FirstFinDropdown()
     await ctx.send("**FINANCE UPDATE IN PROGRESS!**", view=view)
 

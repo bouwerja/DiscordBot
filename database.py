@@ -70,3 +70,80 @@ def save_SavingsData(savingscredited, Necessity, amount):
     """
     cursor.execute(query, (savingscredited, Necessity, amount))
     cursor._connection.commit()
+
+def update_TransactionSource(
+        	TransactionName,
+        	InfoSource,
+        	TransactionNature,
+        	IsCreditor ,
+        	CompanyName,
+        	InterestRate,
+        	DateInterestRateUpdated ,
+        	ActualContractBalance,
+        	CurrentMonthInstalment,
+        	ExpectedNextPayment,
+        	InterestAmount,
+        	DateAmountUpdated,
+        	RemainingInstalments,
+        	IsCurrentlyPaying,
+        	DatePaymentsEnd
+        ):
+    cursor, err = connection_status()
+    if err:
+        print("Failed to connect to database.")
+        return
+
+    query = """
+        INSERT INTO ForFun.TransactionSource (
+        	TransactionName,
+        	InfoSource,
+        	TransactionNature,
+        	IsCreditor ,
+        	CompanyName,
+        	InterestRate,
+        	DateInterestRateUpdated ,
+        	ActualContractBalance,
+        	CurrentMonthInstalment,
+        	ExpectedNextPayment,
+        	InterestAmount,
+        	DateAmountUpdated,
+        	RemainingInstalments,
+        	IsCurrentlyPaying,
+        	DatePaymentsEnd
+        )
+        VALUES(
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s,
+        	%s
+        );
+    """
+    cursor.execute(query, (
+        	TransactionName,
+        	InfoSource,
+        	TransactionNature,
+        	IsCreditor ,
+        	CompanyName,
+        	InterestRate,
+        	DateInterestRateUpdated ,
+        	ActualContractBalance,
+        	CurrentMonthInstalment,
+        	ExpectedNextPayment,
+        	InterestAmount,
+        	DateAmountUpdated,
+        	RemainingInstalments,
+        	IsCurrentlyPaying,
+        	DatePaymentsEnd
+        ))
+    cursor._connection.commit()

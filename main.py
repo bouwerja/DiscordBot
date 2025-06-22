@@ -46,7 +46,7 @@ class AmountModal(discord.ui.Modal):
             
             await interaction.response.send_message(response, ephemeral=True)
             
-            await db.save_TransactionData(
+            db.save_TransactionData(
                 self.transactionSource,
                 self.provider,
                 amount,
@@ -102,43 +102,6 @@ class SecondFinDropdown(discord.ui.View):
                 )
 
 
-class SavingsDropdown(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-
-    @discord.ui.select(
-            placeholder="Transfer IN or OUT of savings?",
-            options=[
-                discord.SelectOption(label="OUT", value="0"),
-                discord.SelectOption(label="IN", value="1")
-                ]
-            )
-
-    async def first_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-        savingscredited = select.values[0]
-        await interaction.response.send_message(
-                SavingsNecessity(savingscredited)
-                )
-
-class SavingsNecessity(discord.ui.View):
-    def __init__(self, savingscredited):
-        super().__init__()
-        self.savingscredited = savingscredited
-
-    @discord.ui.select(
-            placeholder="Was this a necessity?",
-            options=[
-                discord.SelectOption(label="Yes, Necessity", value="1"),
-                discord.SelectOption(label="No, Not Necessity", value="0")
-                ]
-            )
-
-    async def second_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-        isnecessity = select.values[0]
-        await interaction.response.send_modal(
-                AmountModal(self.savingscredited, isnecessity)
-                )
-
 class SavingsAmount(discord.ui.Modal):
     def __init__(self, savingscredited, isnecessity):
         super().__init__(title="Enter the Amount Transfered", timeout=300)
@@ -166,9 +129,11 @@ class SavingsAmount(discord.ui.Modal):
             
             await interaction.response.send_message(response, ephemeral=True)
 
-            await db.save_SavingsData(
-                    self.savingscredited,
-                    self.isnecessity,
+            isnecessity = int(self.isnecessity)
+            savingscredited = int(self.savingscredited)
+            db.save_SavingsData(
+                    savingscredited,
+                    isnecessity,
                     amount
                     )
 
@@ -179,6 +144,46 @@ class SavingsAmount(discord.ui.Modal):
             error_msg = ""
             await interaction.response.send_message(error_msg, ephemeral=True)
             print(f"Modal submission error: {e}")
+
+class SavingsDropdown(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+    @discord.ui.select(
+            placeholder="Transfer IN or OUT of savings?",
+            options=[
+                discord.SelectOption(label="OUT", value="0"),
+                discord.SelectOption(label="IN", value="1")
+                ]
+            )
+
+    async def first_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        savingscredited = select.values[0]
+        await interaction.response.send_message(
+                content="Was this a necessity?",
+                view=SavingsNecessity(savingscredited),
+                ephemeral=True
+                )
+
+class SavingsNecessity(discord.ui.View):
+    def __init__(self, savingscredited):
+        super().__init__()
+        self.savingscredited = savingscredited
+
+    @discord.ui.select(
+            placeholder="Was this a necessity?",
+            options=[
+                discord.SelectOption(label="Yes, Necessity", value="1"),
+                discord.SelectOption(label="No, Not Necessity", value="0")
+                ]
+            )
+
+    async def second_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        isnecessity = select.values[0]
+        await interaction.response.send_modal(
+                SavingsAmount(self.savingscredited, isnecessity)
+                )
+
 
 
 

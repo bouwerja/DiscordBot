@@ -65,7 +65,7 @@ def save_SavingsData(savingscredited, Necessity, amount):
         return
 
     query = """
-        INSERT INTO ForFun.FinanceDetail (SavingsCredited, IsNecessity, CreditorAmount):
+        INSERT INTO ForFun.FinanceDetail (SavingsCredited, IsNecessity, CreditorAmount)
         VALUES (%s, %s, %s)
     """
     cursor.execute(query, (savingscredited, Necessity, amount))

@@ -232,7 +232,7 @@ async def on_message(message):
         return
 
     msg = message.content
-    if msg == "!finance" or msg == "!savings":
+    if msg == "!transact" or msg == "!savings" or msg == "!status":
         channel_id = message.channel.id
         finance_channel = s.FINANCE_ID
         if channel_id == finance_channel:

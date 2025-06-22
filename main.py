@@ -353,7 +353,6 @@ class TransactionSourceUpdate(discord.ui.Modal):
 
 
 
-
 """WORKINGS FOR FINANCE STATUS CHECKING"""
 
 #START HERE
@@ -376,6 +375,27 @@ class TransactionSourceUpdate(discord.ui.Modal):
 
 
 """ESKOM LOAD SHEDDING UPDATES"""
+
+#START HERE
+
+
+
+
+"""GYM TRACKER"""
+
+#START HERE
+
+
+
+
+"""RASPBERRYPI INFORMAION VIEW"""
+
+#START HERE
+
+
+
+
+"""REMINDER FUNCTION"""
 
 #START HERE
 

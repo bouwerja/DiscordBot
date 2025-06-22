@@ -31,5 +31,5 @@ A simple and customizable Discord bot built with Python. Designed for ease of us
    cd DiscordBot
 
 2. Install packages:
-  ```bash
-  pip install discord.py mysql-connector-python python-dotenv
+   ```bash
+   pip install discord.py mysql-connector-python python-dotenv

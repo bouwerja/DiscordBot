@@ -37,10 +37,11 @@ class AmountModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             amount = float(self.amount.value)
+            isnecessity = int(self.provider)
             response = (
                 f"✅ Transaction Recorded!\n"
                 f"**Source:** {self.transactionSource}\n"
-                f"**Is Necessity:** {self.provider}\n"
+                f"**Is Necessity:** {isnecessity}\n"
                 f"**Paid To:** {self.note.value}\n"
                 f"**Amount:** {amount:.2f}\n"
             )
@@ -49,9 +50,9 @@ class AmountModal(discord.ui.Modal):
             
             db.save_TransactionData(
                 self.transactionSource,
-                self.provider,
-                amount,
-                self.note.value
+                isnecessity,
+                self.note.value,
+                amount
             )
             
         except ValueError:

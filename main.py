@@ -102,6 +102,83 @@ class SecondFinDropdown(discord.ui.View):
                 )
 
 
+class SavingsDropdown(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+    @discord.ui.select(
+            placeholder="Transfer IN or OUT of savings?",
+            options=[
+                discord.SelectOption(label="OUT", value="0"),
+                discord.SelectOption(label="IN", value="1")
+                ]
+            )
+
+    async def first_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        savingscredited = select.values[0]
+        await interaction.response.send_message(
+                SavingsNecessity(savingscredited)
+                )
+
+class SavingsNecessity(discord.ui.View):
+    def __init__(self, savingscredited):
+        super().__init__()
+        self.savingscredited = savingscredited
+
+    @discord.ui.select(
+            placeholder="Was this a necessity?",
+            options=[
+                discord.SelectOption(label="Yes, Necessity", value="1"),
+                discord.SelectOption(label="No, Not Necessity", value="0")
+                ]
+            )
+
+    async def second_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        isnecessity = select.values[0]
+        await interaction.response.send_modal(
+                AmountModal(self.savingscredited, isnecessity)
+                )
+
+class SavingsAmount(discord.ui.Modal):
+    def __init__(self, savingscredited, isnecessity):
+        super().__init__(title="Enter the Amount Transfered", timeout=300)
+        self.savingscredited = savingscredited
+        self.isnecessity = isnecessity
+
+        self.amount = discord.ui.TextInput(
+                label="Amount",
+                placeholder="Enter the amount transfered ...",
+                style=discord.TextStyle.short,
+                required=True
+                )
+
+        self.add_item(self.amount)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            amount = float(self.amount.value)
+            response = (
+                f"✅ Transaction Recorded!\n"
+                f"**Money IN or OUT:** {self.savingscredited}\n"
+                f"**Is Necessity:** {self.isnecessity}\n"
+                f"**Amount:** {amount:.2f}\n"
+            )
+            
+            await interaction.response.send_message(response, ephemeral=True)
+
+            await db.save_SavingsData(
+                    self.savingscredited,
+                    self.isnecessity,
+                    amount
+                    )
+
+        except ValueError:
+            error_msg = ""
+            await interaction.response.send_message(error_msg, ephemeral=True)
+        except Exception as e:
+            error_msg = ""
+            await interaction.response.send_message(error_msg, ephemeral=True)
+            print(f"Modal submission error: {e}")
 
 
 
@@ -161,6 +238,11 @@ async def status(ctx):
     if channel_id == finance_channel:
         #CHECK FINANCE STATUS IN FINANCE CHANNEL
         await ctx.send("This is the finance channel")
+
+@bot.command()
+async def savings(ctx):
+    view=SavingsDropdown()
+    await ctx.send("***SAVINGS UPDATE IN PROGRESS!**", view=view)
 
 if __name__ == "__main__":
     token=s.DISCORD_BOT_TOKEN

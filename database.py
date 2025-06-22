@@ -55,6 +55,18 @@ def save_TransactionData(transReason, Necessity, PaidToName, amount):
         INSERT INTO ForFun.FinanceDetail (TransactionReason, IsNecessity, PaidToName, DebitorAmount)
         VALUES (%s, %s, %s, %s)
     """
-    cursor.execute(query, (transReason, Necessity, PaidToName))
-    cursor.connection.commit()
+    cursor.execute(query, (transReason, Necessity, PaidToName, amount))
+    cursor._connection.commit()
 
+def save_SavingsData(savingscredited, Necessity, amount):
+    cursor, err = connection_status()
+    if err:
+        print("Failed to connect to database.")
+        return
+
+    query = """
+        INSERT INTO ForFun.FinanceDetail (SavingsCredited, IsNecessity, CreditorAmount):
+        VALUES (%s, %s, %s)
+    """
+    cursor.execute(query, (savingscredited, Necessity, amount))
+    cursor._connection.commit()

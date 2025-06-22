@@ -39,21 +39,19 @@ class AmountModal(discord.ui.Modal):
             response = (
                 f"✅ Transaction Recorded!\n"
                 f"**Source:** {self.transactionSource}\n"
-                f"**Provider:** {self.provider}\n"
+                f"**Is Necessity:** {self.provider}\n"
                 f"**Paid To:** {self.note.value}\n"
                 f"**Amount:** {amount:.2f}\n"
             )
             
             await interaction.response.send_message(response, ephemeral=True)
             
-            # Here you would typically save to database
-            # await db.save_transaction(
-            #     interaction.user.id,
-            #     self.transactionSource,
-            #     self.provider,
-            #     amount,
-            #     self.note.value
-            # )
+            await db.save_TransactionData(
+                self.transactionSource,
+                self.provider,
+                amount,
+                self.note.value
+            )
             
         except ValueError:
             error_msg = "⚠️ Please enter a valid numeric amount (e.g., 100.00)"

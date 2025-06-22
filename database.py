@@ -45,3 +45,16 @@ def get_DiscordSources():
 
     return source_list
 
+def save_TransactionData(transReason, Necessity, PaidToName, amount):
+    cursor, err = connection_status()
+    if err:
+        print("Failed to connect to database.")
+        return
+
+    query = """
+        INSERT INTO ForFun.FinanceDetail (TransactionReason, IsNecessity, PaidToName, DebitorAmount)
+        VALUES (%s, %s, %s, %s)
+    """
+    cursor.execute(query, (transReason, Necessity, PaidToName))
+    cursor.connection.commit()
+

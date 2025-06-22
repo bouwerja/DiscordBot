@@ -29,3 +29,7 @@ A simple and customizable Discord bot built with Python. Designed for ease of us
    ```bash
    git clone https://github.com/bouwerja/DiscordBot.git
    cd DiscordBot
+
+2. Install packages:
+  ```bash
+  pip install discord.py mysql-connector-python python-dotenv

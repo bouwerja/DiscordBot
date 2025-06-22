@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import settings as s
 import database as db
+import datetime 
 
 intents = discord.Intents.default()
 intents.members = True
@@ -212,9 +213,10 @@ class SavingsNecessity(discord.ui.View):
 @bot.event
 async def on_ready():
     print(f"Bot {bot.user} is ready and waiting!")
-    channel = bot.get_channel(s.GENERAL_ID)
+    channel = bot.get_channel(s.GIT_ID)
+    dateTime = datetime.datetime.now()
     if channel:
-        await channel.send("Hello")
+        await channel.send(f"git pulled on {dateTime}")
     else:
         print("Cannot find the channel")
 

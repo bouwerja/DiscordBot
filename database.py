@@ -69,10 +69,13 @@ def save_SavingsData(savingscredited, Necessity, amount):
         return
 
     query = """
-        INSERT INTO ForFun.FinanceDetail (SavingsCredited, IsNecessity, CreditorAmount)
-        VALUES (%s, %s, %s)
+        INSERT INTO ForFun.FinanceDetail (SavingsCredited, IsNecessity, CreditorAmount, Balance)
+        VALUES (%s, %s, %s, %s)
     """
-    cursor.execute(query, (savingscredited, Necessity, amount))
+    balance = dm.cal_Balance(amount)
+    if balance is None:
+        print("Balance calc error")
+    cursor.execute(query, (savingscredited, Necessity, amount, balance))
     cursor._connection.commit()
 
 def update_TransactionSource(

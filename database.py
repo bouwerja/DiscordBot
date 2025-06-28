@@ -57,9 +57,11 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
         VALUES (%s, %s, %s, %s, %s, %s)
     """
     balance = dm.cal_Balance(amount)
-    if balance:
+    if balance is not None:
         cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))
         cursor._connection.commit()
+    else:
+        print("Balance isn't returing anything")
 
 def save_SavingsData(savingscredited, Necessity, amount):
     cursor, err = connection_status()

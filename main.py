@@ -140,6 +140,8 @@ class SavingsAmount(discord.ui.Modal):
 
             isnecessity = int(self.isnecessity)
             savingscredited = int(self.savingscredited)
+            if savingscredited == 0:
+                amount = amount * (-1)
             db.save_SavingsData(
                     savingscredited,
                     isnecessity,
@@ -576,7 +578,7 @@ async def status(ctx):
         #CHECK FINANCE STATUS IN FINANCE CHANNEL
         await ctx.send("This is the finance channel")
 
-@bot.command()
+@bot.command(name="savings", alias=["s"])
 async def savings(ctx):
     view=SavingsDropdown()
     await ctx.send("***SAVINGS UPDATE IN PROGRESS!**", view=view)

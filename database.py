@@ -1,6 +1,5 @@
 import mysql.connector
 import settings as s
-import database_management as dm
 
 connection = mysql.connector.connect(
         host = s.DATABASE_HOSTNAME, 
@@ -46,6 +45,25 @@ def get_DiscordSources():
 
     return source_dict
 
+def cal_Balance(amount):
+    cursor, err = connection_status()
+    if err:
+        print("Failed to connect to database from DM")
+        return
+    
+    select_query = """
+        SELECT fd.Balance
+        FROM ForFun.FinanceDetail fd
+        ORDER BY FinID DESC
+        LIMIT 1
+    """
+    cursor.execute(select_query)
+    current_balance = cursor.fetchall()
+    current_balance = float(current_balance[0][0])
+    
+    new_balance = current_balance - amount
+    return new_balance
+
 def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount):
     cursor, err = connection_status()
     if err:
@@ -56,7 +74,7 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
         INSERT INTO ForFun.FinanceDetail (TransactionSourceID, TransactionReason, IsNecessity, PaidToName, DebitorAmount, Balance)
         VALUES (%s, %s, %s, %s, %s, %s)
     """
-    balance = dm.cal_Balance(amount)
+    balance = cal_Balance(amount)
     if balance is None:
         print("Balance calc error")
     cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))
@@ -72,7 +90,7 @@ def save_SavingsData(savingscredited, Necessity, amount):
         INSERT INTO ForFun.FinanceDetail (SavingsCredited, IsNecessity, CreditorAmount, Balance)
         VALUES (%s, %s, %s, %s)
     """
-    balance = dm.cal_Balance(amount)
+    balance = cal_Balance(amount)
     if balance is None:
         print("Balance calc error")
     cursor.execute(query, (savingscredited, Necessity, amount, balance))

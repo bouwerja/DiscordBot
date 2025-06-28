@@ -54,7 +54,7 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
 
     query = """
         INSERT INTO ForFun.FinanceDetail (TransactionSourceID, TransactionReason, IsNecessity, PaidToName, DebitorAmount, Balance)
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s)
     """
     balance = dm.cal_Balance(amount)
     cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))

@@ -48,8 +48,15 @@ class AmountModal(discord.ui.Modal):
             
             await interaction.response.send_message(response, ephemeral=True)
             
+            sources_name = self.transactionSource
+            sources_id = 0
+            for key, value in db.get_DiscordSources().items():
+                if value == sources_name:
+                    sources_id = int(key)
+
             db.save_TransactionData(
-                self.transactionSource,
+                sources_id,
+                sources_name,
                 isnecessity,
                 self.note.value,
                 amount
@@ -71,7 +78,7 @@ class FirstFinDropdown(discord.ui.View):
             placeholder="Choose the transaction source.",
             options=[
                 discord.SelectOption(label=values, value=values)
-                for _, values in enumerate(db.get_DiscordSources())
+                for _, values in db.get_DiscordSources().items()
                 ]
             )
 
@@ -402,7 +409,7 @@ class WriteTransactionSource(discord.ui.View):
 
 """WORKINGS FOR FINANCE STATUS CHECKING"""
 
-#START HERE
+
 
 
 

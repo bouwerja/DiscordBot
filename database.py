@@ -1,5 +1,6 @@
 import mysql.connector
 import settings as s
+import database_management as dm
 
 connection = mysql.connector.connect(
         host = s.DATABASE_HOSTNAME, 
@@ -36,26 +37,27 @@ def get_FinanceDetail():
 
 def get_DiscordSources():
     trans_sources = get_TransactionSource()
-    source_list = []
+    source_dict = {}
     for i in range(0, len(trans_sources), 1):
         if trans_sources[i][3] == "Discord":
-            source_list.append(trans_sources[i][2])
+            source_dict[f'{trans_sources[i][0]}'] = trans_sources[i][2]
         else:
             continue
 
-    return source_list
+    return source_dict
 
-def save_TransactionData(transReason, Necessity, PaidToName, amount):
+def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount):
     cursor, err = connection_status()
     if err:
         print("Failed to connect to database.")
         return
 
     query = """
-        INSERT INTO ForFun.FinanceDetail (TransactionReason, IsNecessity, PaidToName, DebitorAmount)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO ForFun.FinanceDetail (TransactionSourceID, TransactionReason, IsNecessity, PaidToName, DebitorAmount)
+        VALUES (%s, %s, %s, %s, %s)
     """
-    cursor.execute(query, (transReason, Necessity, PaidToName, amount))
+    cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount))
+    dm.cal_Balance(amount)
     cursor._connection.commit()
 
 def save_SavingsData(savingscredited, Necessity, amount):

@@ -409,7 +409,7 @@ class WriteTransactionSource(discord.ui.View):
 
 """WORKINGS FOR FINANCE STATUS CHECKING"""
 
-
+#START HERE
 
 
 
@@ -567,7 +567,7 @@ async def transact(ctx: commands.Context, args: str=None):
         view = FirstFinDropdown()
         await ctx.send("**FINANCE UPDATE IN PROGRESS!**", view=view)
 
-@bot.command()
+@bot.command(name="status", alias=["st"])
 async def status(ctx):
     channel_id = ctx.channel.id
     finance_channel = s.FINANCE_ID
@@ -576,7 +576,7 @@ async def status(ctx):
         #CHECK FINANCE STATUS IN FINANCE CHANNEL
         await ctx.send("This is the finance channel")
 
-@bot.command(name="savings", alias=["s", "save"])
+@bot.command(name="save", alias=["s"])
 async def savings(ctx):
     view=SavingsDropdown()
     await ctx.send("***SAVINGS UPDATE IN PROGRESS!**", view=view)

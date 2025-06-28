@@ -140,8 +140,6 @@ class SavingsAmount(discord.ui.Modal):
 
             isnecessity = int(self.isnecessity)
             savingscredited = int(self.savingscredited)
-            if savingscredited == 0:
-                amount = amount * (-1)
             db.save_SavingsData(
                     savingscredited,
                     isnecessity,

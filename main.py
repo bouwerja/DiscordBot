@@ -576,7 +576,7 @@ async def status(ctx):
         #CHECK FINANCE STATUS IN FINANCE CHANNEL
         await ctx.send("This is the finance channel")
 
-@bot.command(name="savings", alias=["s"])
+@bot.command(name="savings", alias=["s", "save"])
 async def savings(ctx):
     view=SavingsDropdown()
     await ctx.send("***SAVINGS UPDATE IN PROGRESS!**", view=view)

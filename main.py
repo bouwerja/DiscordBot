@@ -186,10 +186,7 @@ class SavingsNecessity(discord.ui.View):
                 SavingsAmount(self.savingscredited, isnecessity)
                 )
 
-"""
-Problem: Cannot pass a modal as a reponse of another modal
-Fix: Create JSON string that gets passed to other modal functions
-"""
+"""NEW TRANSACTION SOURCE [[BROKEN]]"""
 transaction_data = {}
 
 class TransactionSourceUpdateFirst(discord.ui.Modal):
@@ -544,16 +541,15 @@ async def transact(ctx: commands.Context, args: str=None):
 
                 @discord.ui.button(label="SUBMIT", style=discord.ButtonStyle.green, emoji="✅", row=1)
                 async def submit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-                    if not transaction_data.get('RemainingInstalments'):  # Check if all modals were completed
+                    if not transaction_data.get('RemainingInstalments'):
                         return await interaction.response.send_message(
                             "⚠️ Please complete all information sections first!",
                             ephemeral=True
                         )
 
-                    # Create and show the submission view
                     submit_view = WriteTransactionSource()
                     await submit_view.handle_submit(interaction)
-                    self.stop()  # Remove the view after submission
+                    self.stop()
 
             await ctx.send(embed=embed, view=TransactionUpdateView())
 

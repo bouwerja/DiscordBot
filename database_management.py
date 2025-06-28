@@ -2,6 +2,7 @@ import mysql.connector
 import settings as s
 import datetime
 import calendar
+import yfinance as yf
 
 connection = mysql.connector.connect(
         host = s.DATABASE_HOSTNAME, 
@@ -50,3 +51,27 @@ def ReacurringUpdates():
             VALUES(9, 'Monthly Income', %s, %s, 1, %s);
         """
         cursor.execute(insert_query, (balance, income_result, 'Capitec Amount'))
+        cursor._connection.commit()
+
+def GoldPriceTracking():
+    data = yf.Ticker("GLD.JO")
+    twoYearPrice = data.history(interval='1d', period='2Y')
+    price_dict = {}
+    
+    for row in range(len(twoYearPrice)):
+        date = twoYearPrice.index[row]
+        price_dict[f'{date.date()}'] = {
+            'ClosePrice': int(twoYearPrice['Close'][row]) / 100,
+            'Volume': int(twoYearPrice['Volume'][row])
+        }
+
+    select_query = """
+    
+    """
+
+    insert_query = """
+        INSERT INTO ForFun.GoldPrice (Date, ClosePrice, Volume, PriceChange, TwelveMonthMovingAverage, CMA, SeasonalWeighting , LinearRegression, PointForecast, Error)
+        VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    
+    return price_dict

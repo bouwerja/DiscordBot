@@ -53,11 +53,11 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
         return
 
     query = """
-        INSERT INTO ForFun.FinanceDetail (TransactionSourceID, TransactionReason, IsNecessity, PaidToName, DebitorAmount)
+        INSERT INTO ForFun.FinanceDetail (TransactionSourceID, TransactionReason, IsNecessity, PaidToName, DebitorAmount, Balance)
         VALUES (%s, %s, %s, %s, %s)
     """
-    cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount))
-    dm.cal_Balance(amount)
+    balance = dm.cal_Balance(amount)
+    cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))
     cursor._connection.commit()
 
 def save_SavingsData(savingscredited, Necessity, amount):

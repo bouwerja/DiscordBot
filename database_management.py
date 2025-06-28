@@ -21,9 +21,10 @@ def cal_Balance(amount):
         return
     
     select_query = """
-        SELECT SUM(fd.Balance)
+        SELECT fd.Balance
         FROM ForFun.FinanceDetail fd
-        WHERE FinID <> (SELECT MAX(FinID) FROM ForFun.FinanceDetail fd2)
+        ORDER BY FinID DESC
+        LIMIT 1
     """
     cursor.execute(select_query)
     current_balance = cursor.fetchall()

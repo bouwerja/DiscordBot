@@ -190,6 +190,8 @@ class SavingsNecessity(discord.ui.View):
 Problem: Cannot pass a modal as a reponse of another modal
 Fix: Create JSON string that gets passed to other modal functions
 """
+transaction_data = {}
+
 class TransactionSourceUpdateFirst(discord.ui.Modal):
     def __init__(self):
         super().__init__(title="Please complete all the fields", timeout=300)
@@ -233,138 +235,17 @@ class TransactionSourceUpdateFirst(discord.ui.Modal):
         self.add_item(self.CompanyName)
 
     async def on_submit(self, interaction: discord.Interaction):
-        TransactionName = self.TransactionName.value
-        InfoSource = self.InfoSource.value
-        TransactionNature = self.TransactionNature.value
-        IsCreditor = 1 if self.IsCreditor.value == "True" else 0
-        CompanyName = self.CompanyName.value
-
-        await interaction.response.send_modal(TransactionSourceUpdateSecond(
-            TransactionName,
-            InfoSource,
-            TransactionNature,
-            IsCreditor,
-            CompanyName
-            ))
-
-
-class TransactionSourceUpdateThird(discord.ui.Modal):
-    def __init__(
-            self, 
-            TransactionName, 
-            InfoSource,
-            TransactionNature, 
-            IsCreditor, 
-            CompanyName,
-            InterestRate,
-            ActualContractBalance,
-            CurrentMonthInstalment,
-            ExpectedNextPayment,
-            InterestAmount):
-        self.TrasnactionName = TransactionName
-        self.InfoSource = InfoSource
-        self.TransactionNature = TransactionNature
-        self.IsCreditor = IsCreditor
-        self.CompanyName = CompanyName
-        self.InterestRate = InterestRate
-        self.ActualContractBalance = ActualContractBalance
-        self.CurrentMonthInstalment = CurrentMonthInstalment
-        self.ExpectedNextPayment = ExpectedNextPayment
-        self.InterestAmount = InterestAmount
-        super().__init__(title="Please complete all the fields", timeout=300)
-
-        self.RemainingInstalments = discord.ui.TextInput(
-                label="How long do you still need to pay?",
-                placeholder="e.g. 60 instalments",
-                style=discord.TextStyle.short,
-                required=False
-                )
-        self.IsCurrentlyPaying = discord.ui.TextInput(
-                label="Is this a current reacurring payment?",
-                placeholder="True or False",
-                style=discord.TextStyle.short,
-                required=True
-                )
-        self.DatePaymentsEnd = discord.ui.TextInput(
-                label="When do you stop paying?",
-                placeholder="2099-01-01",
-                style=discord.TextStyle.short,
-                required=False
-                )
-        self.add_item(self.RemainingInstalments)
-        self.add_item(self.IsCurrentlyPaying)
-        self.add_item(self.DatePaymentsEnd)
-
-        async def on_submit(self, interaction: discord.Interaction):
-            try:
-                IsCreditor = int(self.IsCreditor.values[0]) if self.IsCreditor.values else 0
-                InterestRate = float(self.InterestRate.value) if self.InterestRate.value else 0.0
-                ActualContractBalance = float(self.ActualContractBalance.value) if self.ActualContractBalance.value else 0.0
-                CurrentMonthInstalment = float(self.CurrentMonthInstalment.value) if self.CurrentMonthInstalment.value else 0.0
-                ExpectedNextPayment = float(self.ExpectedNextPayment.value) if self.ExpectedNextPayment.value else 0.0
-                InterestAmount = float(self.InterestAmount.value) if self.InterestAmount.value else 0.0
-                RemainingInstalments = int(self.RemainingInstalments.value) if self.RemainingInstalments.value else 0
-                IsCurrentlyPaying = 1 if self.IsCurrentlyPaying.value == "True" else 0
-                DatePaymentsEnd = datetime.datetime.strptime(self.DatePaymentsEnd.value, '%Y-%m-%d') if self.DatePaymentsEnd.value else None
-    
-                response = (
-                    f"✅ Transaction Source Updated!\n"
-                    f"**Transaction Name:** {self.TransactionName.value}\n"
-                    f"**Info Source:** {self.InfoSource.value}\n"
-                    f"**Transaction Nature:** {self.TransactionNature.value}\n"
-                    f"**Is Creditor:** {'Yes' if IsCreditor else 'No'}\n"
-                    f"**Company Name:** {self.CompanyName.value}\n"
-                    f"**Interest Rate:** {InterestRate:.2%}\n"
-                    f"**Contract Balance:** R{ActualContractBalance:,.2f}\n"
-                    f"**Current Installment:** R{CurrentMonthInstalment:,.2f}\n"
-                    f"**Next Payment:** R{ExpectedNextPayment:,.2f}\n"
-                    f"**Total Interest:** R{InterestAmount:,.2f}\n"
-                    f"**Remaining Installments:** {RemainingInstalments}\n"
-                    f"**Currently Paying:** {'Yes' if IsCurrentlyPaying else 'No'}\n"
-                    f"**Payments End Date:** {DatePaymentsEnd.strftime('%Y-%m-%d') if DatePaymentsEnd else 'Not specified'}"
-                )
-            
-                await interaction.response.send_message(response, ephemeral=True)
-    
-                db.update_TransactionSource(
-                    TransactionName=self.TransactionName.value,
-                    InfoSource=self.InfoSource.value,
-                    TransactionNature=self.TransactionNature.value,
-                    IsCreditor=IsCreditor,
-                    CompanyName=self.CompanyName.value,
-                    InterestRate=InterestRate,
-                    DateInterestRateUpdated=datetime.datetime.now(),
-                    ActualContractBalance=ActualContractBalance,
-                    CurrentMonthInstalment=CurrentMonthInstalment,
-                    ExpectedNextPayment=ExpectedNextPayment,
-                    InterestAmount=InterestAmount,
-                    DateAmountUpdated=datetime.datetime.now(),
-                    RemainingInstalments=RemainingInstalments,
-                    IsCurrentlyPaying=IsCurrentlyPaying,
-                    DatePaymentsEnd=DatePaymentsEnd
-                )
-    
-            except ValueError as e:
-                error_msg = f"⚠️ Invalid input format: {str(e)}"
-                await interaction.response.send_message(error_msg, ephemeral=True)
-            except Exception as e:
-                error_msg = f"❌ An error occurred while saving: {str(e)}"
-                await interaction.response.send_message(error_msg, ephemeral=True)
-                print(f"Modal submission error: {e}")
+        is_creditor = 1 if str(self.IsCreditor.value).lower() == "true" else 0
+        transaction_data.update({
+            'TransactionName' : str(self.TransactionName.value),
+            'InfoSource' : str(self.InfoSource.value), 
+            'TransactionNature' : str(self.TransactionNature.value),
+            'IsCreditor' : is_creditor,
+            'CompanyName' : str(self.CompanyName.value)
+        })
 
 class TransactionSourceUpdateSecond(discord.ui.Modal):
-    def __init__(
-            self, 
-            TransactionName, 
-            InfoSource,
-            TransactionNature, 
-            IsCreditor, 
-            CompanyName):
-        self.TrasnactionName = TransactionName
-        self.InfoSource = InfoSource
-        self.TransactionNature = TransactionNature
-        self.IsCreditor = IsCreditor
-        self.CompanyName = CompanyName
+    def __init__(self):
         super().__init__(title="Please complete all the fields", timeout=300)
 
         self.InterestRate = discord.ui.TextInput(
@@ -406,23 +287,96 @@ class TransactionSourceUpdateSecond(discord.ui.Modal):
         self.add_item(self.InterestAmount)
 
         async def on_submit(self, interaction: discord.Interaction):
-            InterestRate = self.InterestRate.value
-            ActualContractBalance = self.ActualContractBalance.value
-            CurrentMonthInstalment = self.CurrentMonthInstalment.value
-            ExpectedNextPayment = self.ExpectedNextPayment.value
-            InterestAmount = self.InterestAmount.value
+            transaction_data.update({
+                'InterestRate' : self.InterestRate.value,
+                'ActualContractBalance' : self.ActualContractBalance.value,
+                'CurrentMonthInstalment' : self.CurrentMonthInstalment.value,
+                'ExpectedNextPayment' : self.ExpectedNextPayment.value,
+                'InterestAmount' : self.InterestAmount.value
+            })
+            
+class TransactionSourceUpdateThird(discord.ui.Modal):
+    def __init__(self):
+        super().__init__(title="Please complete all the fields", timeout=300)
 
-            await interaction.response.send_modal(TransactionSourceUpdateThird(
-                self.TrasnactionName,
-                self.InfoSource,
-                self.TransactionNature,
-                self.IsCreditor,
-                self.CompanyName,
-                InterestRate,
-                ActualContractBalance,
-                CurrentMonthInstalment,
-                ExpectedNextPayment,
-                InterestAmount))
+        self.RemainingInstalments = discord.ui.TextInput(
+                label="How long do you still need to pay?",
+                placeholder="e.g. 60 instalments",
+                style=discord.TextStyle.short,
+                required=False
+                )
+        self.IsCurrentlyPaying = discord.ui.TextInput(
+                label="Is this a current reacurring payment?",
+                placeholder="True or False",
+                style=discord.TextStyle.short,
+                required=True
+                )
+        self.DatePaymentsEnd = discord.ui.TextInput(
+                label="When do you stop paying?",
+                placeholder="2099-01-01",
+                style=discord.TextStyle.short,
+                required=False
+                )
+        self.add_item(self.RemainingInstalments)
+        self.add_item(self.IsCurrentlyPaying)
+        self.add_item(self.DatePaymentsEnd)
+
+        async def on_submit(self, interaction: discord.Interaction):
+            try:
+                IsCreditor = transaction_data['IsCreditor']
+                InterestRate = float(transaction_data['InterestRate'])
+                ActualContractBalance = float(transaction_data['ActualContractBalance'])
+                CurrentMonthInstalment = float(transaction_data['CurrentMonthInstalment'])
+                ExpectedNextPayment = float(transaction_data['ExpectedNextPayment'])
+                InterestAmount = float(transaction_data['InterestRate'])
+                RemainingInstalments = int(self.RemainingInstalments.value) if self.RemainingInstalments.value else 0
+                IsCurrentlyPaying = 1 if self.IsCurrentlyPaying.value == "True" else 0
+                DatePaymentsEnd = datetime.datetime.strptime(self.DatePaymentsEnd.value, '%Y-%m-%d') if self.DatePaymentsEnd.value else None
+    
+                db.update_TransactionSource(
+                    TransactionName=self.TransactionName.value,
+                    InfoSource=self.InfoSource.value,
+                    TransactionNature=self.TransactionNature.value,
+                    IsCreditor=IsCreditor,
+                    CompanyName=self.CompanyName.value,
+                    InterestRate=InterestRate,
+                    DateInterestRateUpdated=datetime.datetime.now(),
+                    ActualContractBalance=ActualContractBalance,
+                    CurrentMonthInstalment=CurrentMonthInstalment,
+                    ExpectedNextPayment=ExpectedNextPayment,
+                    InterestAmount=InterestAmount,
+                    DateAmountUpdated=datetime.datetime.now(),
+                    RemainingInstalments=RemainingInstalments,
+                    IsCurrentlyPaying=IsCurrentlyPaying,
+                    DatePaymentsEnd=DatePaymentsEnd
+                )
+
+                response = (
+                    f"✅ Transaction Source Updated!\n"
+                    f"**Transaction Name:** {self.TransactionName.value}\n"
+                    f"**Info Source:** {self.InfoSource.value}\n"
+                    f"**Transaction Nature:** {self.TransactionNature.value}\n"
+                    f"**Is Creditor:** {'Yes' if IsCreditor else 'No'}\n"
+                    f"**Company Name:** {self.CompanyName.value}\n"
+                    f"**Interest Rate:** {InterestRate:.2%}\n"
+                    f"**Contract Balance:** R{ActualContractBalance:,.2f}\n"
+                    f"**Current Installment:** R{CurrentMonthInstalment:,.2f}\n"
+                    f"**Next Payment:** R{ExpectedNextPayment:,.2f}\n"
+                    f"**Total Interest:** R{InterestAmount:,.2f}\n"
+                    f"**Remaining Installments:** {RemainingInstalments}\n"
+                    f"**Currently Paying:** {'Yes' if IsCurrentlyPaying else 'No'}\n"
+                    f"**Payments End Date:** {DatePaymentsEnd.strftime('%Y-%m-%d') if DatePaymentsEnd else 'Not specified'}"
+                )
+            
+                await interaction.response.send_message(response, ephemeral=True)
+    
+            except ValueError as e:
+                error_msg = f"⚠️ Invalid input format: {str(e)}"
+                await interaction.response.send_message(error_msg, ephemeral=True)
+            except Exception as e:
+                error_msg = f"❌ An error occurred while saving: {str(e)}"
+                await interaction.response.send_message(error_msg, ephemeral=True)
+                print(f"Modal submission error: {e}")
 
 """WORKINGS FOR FINANCE STATUS CHECKING"""
 
@@ -469,6 +423,16 @@ class TransactionSourceUpdateSecond(discord.ui.Modal):
 """REMINDER FUNCTION"""
 
 #START HERE
+
+
+
+
+"""REPORT FUNCTION"""
+
+#START HERE
+#   OPTION FOR FINANCIAL REPORT
+#   OPTION FOR HABIT REPORT
+#   OPTION FOR GENERAL REPORT COMBINING ALL
 
 
 
@@ -520,7 +484,7 @@ async def transact(ctx: commands.Context, args: str=None):
             await ctx.send("Please give additional information e.g. update-ts -> update transaction sources")
         
         elif additional_command.startswith("new-ts"):
-            class ModalButtonView(discord.ui.View):
+            class ModalButtonView1(discord.ui.View):
                 def __init__(self):
                     super().__init__(timeout=120)
                 
@@ -530,14 +494,38 @@ async def transact(ctx: commands.Context, args: str=None):
                                  row=0)
                 async def modal_button(self, interaction: discord.Interaction, button: discord.ui.Button):
                     await interaction.response.send_modal(TransactionSourceUpdateFirst())
+                    await interaction.followup.send(embed=embed, view=ModalButtonView2())
+
+            class ModalButtonView2(discord.ui.View):
+                def __init__(self):
+                    super().__init__(timeout=120)
+                
+                @discord.ui.button(label="Open Transaction Form", 
+                                 style=discord.ButtonStyle.primary, 
+                                 emoji="📝",
+                                 row=0)
+                async def modal_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.send_modal(TransactionSourceUpdateSecond())
+                    await interaction.followup.send(embed=embed, view=ModalButtonView3())
+
+            class ModalButtonView3(discord.ui.View):
+                def __init__(self):
+                    super().__init__(timeout=120)
+                
+                @discord.ui.button(label="Open Transaction Form", 
+                                 style=discord.ButtonStyle.primary, 
+                                 emoji="📝",
+                                 row=0)
+                async def modal_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                    await interaction.response.send_modal(TransactionSourceUpdateThird())
             
             embed = discord.Embed(
                 title="New Transaction Source",
                 description="Click the button below to add a New Transaction Source:",
                 color=discord.Color.blue()
             )
-            view = ModalButtonView()
-            await ctx.send(embed=embed, view=view)
+                
+            await ctx.send(embed=embed, view=ModalButtonView1())
 
         else:
             view=FirstFinDropdown()

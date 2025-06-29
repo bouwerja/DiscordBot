@@ -469,6 +469,8 @@ class WriteTransactionSource(discord.ui.View):
 @bot.event
 async def on_ready():
     print(f"Bot {bot.user} is ready and waiting!")
+    status_channel = bot.get_channel(s.STATUS_ID)
+    await status_channel.send(f"Bot restarted on {datetime.datetime.now()}")
     channel = bot.get_channel(s.GIT_ID)
     dateTime = datetime.datetime.now()
     if channel:

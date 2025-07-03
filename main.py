@@ -3,7 +3,7 @@ from discord.ext import commands
 import settings as s
 import database as db
 import datetime
-import database_management as dm
+from database_management import StatusInsert
 
 intents = discord.Intents.default()
 intents.members = True
@@ -471,7 +471,7 @@ class WriteTransactionSource(discord.ui.View):
 async def on_ready():
     status_channel = bot.get_channel(s.STATUS_ID)
     await status_channel.send(f"Bot restarted on {datetime.datetime.now()}")
-    dm.StatusInsert()
+    StatusInsert()
 
     channel = bot.get_channel(s.GIT_ID)
     dateTime = datetime.datetime.now()

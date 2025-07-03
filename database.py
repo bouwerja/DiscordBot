@@ -20,7 +20,7 @@ def get_TransactionSource():
         print("Failed to connect to database.")
         return
 
-    cursor.execute("SELECT * FROM ForFun.TransactionSource")
+    cursor.execute("SELECT * FROM ForFun.Budgeting")
     result = cursor.fetchall()
     return result
 
@@ -39,7 +39,7 @@ def get_DiscordSources():
     source_dict = {}
     for i in range(0, len(trans_sources), 1):
         if trans_sources[i][3] == "Discord":
-            source_dict[f'{trans_sources[i][0]}'] = trans_sources[i][2]
+            source_dict[f'{trans_sources[i][0]}'] = trans_sources[i][1]
         else:
             continue
 

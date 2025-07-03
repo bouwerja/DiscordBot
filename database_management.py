@@ -75,3 +75,16 @@ def GoldPriceTracking():
     """
     
     return price_dict
+
+def StatusInsert():
+    cursor, err = dm_ConnectionStatus()
+    if err:
+        print("failed to connect to DataBase")
+        return
+    
+    insert_query = """
+        INSERT INTO ForFun.AppStatusLog (LogStatus, AppName)
+        VALUES (%s, %s);
+    """
+    cursor.execute(insert_query, ('ONLINE', 'DISCORD'))
+    cursor._connection.commit()

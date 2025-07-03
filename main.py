@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 import settings as s
 import database as db
-import datetime 
+import datetime
+import database_management as dm
 
 intents = discord.Intents.default()
 intents.members = True
@@ -468,9 +469,10 @@ class WriteTransactionSource(discord.ui.View):
 
 @bot.event
 async def on_ready():
-    print(f"Bot {bot.user} is ready and waiting!")
     status_channel = bot.get_channel(s.STATUS_ID)
     await status_channel.send(f"Bot restarted on {datetime.datetime.now()}")
+    dm.StatusInsert()
+
     channel = bot.get_channel(s.GIT_ID)
     dateTime = datetime.datetime.now()
     if channel:

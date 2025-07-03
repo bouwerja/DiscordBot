@@ -11,7 +11,7 @@ connection = mysql.connector.connect(
         password = s.ACTIVE_USER_PWD,
         database = s.ACTIVE_DATABASE
         )
-def dm_ConnectionStatus():
+def dm_ConnectionStatus(close=False):
     if connection.is_connected():
         mysql_cursor = connection.cursor()
         return mysql_cursor, False
@@ -53,6 +53,9 @@ def ReacurringUpdates():
         """
         cursor.execute(insert_query, (balance, income_result, 'Capitec Amount'))
         cursor._connection.commit()
+        cursor.close()
+        connection.close()
+        
 
 def GoldPriceTracking():
     data = yf.Ticker("GLD.JO")
@@ -89,6 +92,8 @@ def StatusInsert(online_status = 'ONLINE'):
     """
     cursor.execute(insert_query, (online_status, 'DISCORD'))
     cursor._connection.commit()
+    cursor.close()
+    connection.close()
 
 def RestartErrorCheck():
     cursor, err = dm_ConnectionStatus()
@@ -113,5 +118,7 @@ def RestartErrorCheck():
     if restart_timeDelta_float > 3600:
         hasError = True
         StatusInsert('MISSED RESTART')
-
+    
+    cursor.close()
+    connection.close()
     return latest_status_time, hasError

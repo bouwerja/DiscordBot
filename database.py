@@ -68,7 +68,7 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
         return
 
     query = """
-        INSERT INTO ForFun.FinanceDetail (TransactionSourceID, TransactionReason, IsNecessity, PaidToName, DebitorAmount, Balance)
+        INSERT INTO ForFun.FinanceDetail (BudgetID, TransactionReason, IsNecessity, Notes, DebitorAmount, Balance)
         VALUES (%s, %s, %s, %s, %s, %s)
     """
     balance = cal_Balance(amount)

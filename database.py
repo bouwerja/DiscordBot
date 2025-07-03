@@ -22,6 +22,8 @@ def get_TransactionSource():
 
     cursor.execute("SELECT * FROM ForFun.Budgeting")
     result = cursor.fetchall()
+    cursor.close()
+    connection.close()
     return result
 
 def get_FinanceDetail():
@@ -32,6 +34,8 @@ def get_FinanceDetail():
 
     cursor.execute("SELECT * FROM ForFun.FinanceDetail ORDER BY DateRecordCreated DESC LIMIT 10")
     result = cursor.fetchall()
+    cursor.close()
+    connection.close()
     return result
 
 def get_DiscordSources():
@@ -56,9 +60,12 @@ def cal_Balance(amount):
     """
     cursor.execute(select_query)
     current_balance = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
     current_balance = float(current_balance[0][0])
-    
     new_balance = current_balance - amount
+
     return new_balance
 
 def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount):
@@ -76,6 +83,8 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
         print("Balance calc error")
     cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))
     cursor._connection.commit()
+    cursor.close()
+    connection.close()
 
 def save_SavingsData(savingscredited, Necessity, amount):
     cursor, err = connection_status()
@@ -92,6 +101,8 @@ def save_SavingsData(savingscredited, Necessity, amount):
         print("Balance calc error")
     cursor.execute(query, (savingscredited, Necessity, amount, balance))
     cursor._connection.commit()
+    cursor.close()
+    connection.close()
 
 def update_TransactionSource(
         	TransactionName,
@@ -169,3 +180,5 @@ def update_TransactionSource(
         	DatePaymentsEnd
         ))
     cursor._connection.commit()
+    cursor.close()
+    connection.close()

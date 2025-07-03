@@ -3,7 +3,7 @@ from discord.ext import commands
 import settings as s
 import database as db
 import datetime
-from database_management import StatusInsert
+from database_management import StatusInsert, RestartErrorCheck
 
 intents = discord.Intents.default()
 intents.members = True
@@ -470,8 +470,12 @@ class WriteTransactionSource(discord.ui.View):
 @bot.event
 async def on_ready():
     status_channel = bot.get_channel(s.STATUS_ID)
-    await status_channel.send(f"Bot restarted on {datetime.datetime.now()}")
-    StatusInsert()
+    restart_time, err = RestartErrorCheck()    #Check previous status log
+    if err:
+        await status_channel.send(f"Bot failed to restart\nLast restart time {restart_time}")
+    else:
+        await status_channel.send(f"Bot restarted on {restart_time}")
+    StatusInsert()    #INSERT current status log
 
     channel = bot.get_channel(s.GIT_ID)
     dateTime = datetime.datetime.now()

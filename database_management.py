@@ -39,11 +39,15 @@ def ReacurringUpdates():
         balance_query = """
             SELECT SUM(Balance) FROM ForFun.FinanceDetail fd
         """
-        cursor.execute(income_query)
-        income_fetch = cursor.fetchall()
+        try:
+            cursor.execute(income_query)
+            income_fetch = cursor.fetchall()
+            cursor.execute(balance_query)
+            balance_fetch = cursor.fetchall()
+        except mysql.connector.Error as err:
+            return
+        
         income_result = income_fetch[0][0]
-        cursor.execute(balance_query)
-        balance_fetch = cursor.fetchall()
         balance_result = balance_fetch[0][0]
         balance = float(income_result) + float(balance_result)
 
@@ -51,10 +55,11 @@ def ReacurringUpdates():
             INSERT INTO ForFun.FinanceDetail (TransactionSourceID , TransactionReason, Balance, CreditorAmount, IsNecessity, PaidToName)
             VALUES(9, 'Monthly Income', %s, %s, 1, %s);
         """
-        cursor.execute(insert_query, (balance, income_result, 'Capitec Amount'))
-        cursor._connection.commit()
-        cursor.close()
-        connection.close()
+        try:
+            cursor.execute(insert_query, (balance, income_result, 'Capitec Amount'))
+            cursor._connection.commit()
+        finally:
+            cursor.close()
         
 
 def GoldPriceTracking():
@@ -90,10 +95,11 @@ def StatusInsert(online_status = 'ONLINE'):
         INSERT INTO ForFun.AppStatusLog (LogStatus, AppName)
         VALUES (%s, %s);
     """
-    cursor.execute(insert_query, (online_status, 'DISCORD'))
-    cursor._connection.commit()
-    cursor.close()
-    connection.close()
+    try:
+        cursor.execute(insert_query, (online_status, 'DISCORD'))
+        cursor._connection.commit()
+    finally:
+        cursor.close()
 
 def RestartErrorCheck():
     cursor, err = dm_ConnectionStatus()
@@ -107,18 +113,21 @@ def RestartErrorCheck():
         ORDER BY LogID DESC
         LIMIT 2
     """
-    cursor.execute(select_query)
-    raw_result = cursor.fetchall()
-    latest_status_time = raw_result[0][0]
-    prev_status_time = raw_result[1][0]
-    restart_timeDelta = latest_status_time - prev_status_time
-    restart_timeDelta_float = float(restart_timeDelta.total_seconds())
+    try:
+        cursor.execute(select_query)
+        raw_result = cursor.fetchall()
 
-    hasError = False    # Variable to indicate error
-    if restart_timeDelta_float > 3600:
-        hasError = True
-        StatusInsert('MISSED RESTART')
+        latest_status_time = raw_result[0][0]
+        prev_status_time = raw_result[1][0]
+        restart_timeDelta = latest_status_time - prev_status_time
+        restart_timeDelta_float = float(restart_timeDelta.total_seconds())
+
+        hasError = False    # Variable to indicate error
+        if restart_timeDelta_float > 3600:
+            hasError = True
+            StatusInsert('MISSED RESTART')
+
+        return hasError
     
-    cursor.close()
-    connection.close()
-    return latest_status_time, hasError
+    finally:
+        cursor.close()

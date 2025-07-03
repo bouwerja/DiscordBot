@@ -19,12 +19,12 @@ def get_TransactionSource():
     if err:
         print("Failed to connect to database.")
         return
-
-    cursor.execute("SELECT * FROM ForFun.Budgeting")
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return result
+    try:
+        cursor.execute("SELECT * FROM ForFun.Budgeting")
+        result = cursor.fetchall()
+        return result
+    finally:
+        cursor.close()
 
 def get_FinanceDetail():
     cursor, err = connection_status()
@@ -32,11 +32,12 @@ def get_FinanceDetail():
         print("Failed to connect to database.")
         return
 
-    cursor.execute("SELECT * FROM ForFun.FinanceDetail ORDER BY DateRecordCreated DESC LIMIT 10")
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return result
+    try:
+        cursor.execute("SELECT * FROM ForFun.FinanceDetail ORDER BY DateRecordCreated DESC LIMIT 10")
+        result = cursor.fetchall()
+        return result
+    finally:
+        cursor.close()
 
 def get_DiscordSources():
     trans_sources = get_TransactionSource()
@@ -58,15 +59,16 @@ def cal_Balance(amount):
         ORDER BY FinID DESC
         LIMIT 1
     """
-    cursor.execute(select_query)
-    current_balance = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    try:
+        cursor.execute(select_query)
+        current_balance = cursor.fetchall()
+        
+        current_balance = float(current_balance[0][0])
+        new_balance = current_balance - amount
 
-    current_balance = float(current_balance[0][0])
-    new_balance = current_balance - amount
-
-    return new_balance
+        return new_balance
+    finally:
+        cursor.close()
 
 def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount):
     cursor, err = connection_status()
@@ -81,10 +83,12 @@ def save_TransactionData(transSource, transReason, Necessity, PaidToName, amount
     balance = cal_Balance(amount)
     if balance is None:
         print("Balance calc error")
-    cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))
-    cursor._connection.commit()
-    cursor.close()
-    connection.close()
+    
+    try:
+        cursor.execute(query, (transSource, transReason, Necessity, PaidToName, amount, balance))
+        cursor._connection.commit()
+    finally:
+        cursor.close()
 
 def save_SavingsData(savingscredited, Necessity, amount):
     cursor, err = connection_status()
@@ -99,10 +103,12 @@ def save_SavingsData(savingscredited, Necessity, amount):
     balance = cal_Balance(amount)
     if balance is None:
         print("Balance calc error")
-    cursor.execute(query, (savingscredited, Necessity, amount, balance))
-    cursor._connection.commit()
-    cursor.close()
-    connection.close()
+    
+    try:
+        cursor.execute(query, (savingscredited, Necessity, amount, balance))
+        cursor._connection.commit()
+    finally:
+        cursor.close()
 
 def update_TransactionSource(
         	TransactionName,
@@ -162,23 +168,25 @@ def update_TransactionSource(
         	%s
         );
     """
-    cursor.execute(query, (
-        	TransactionName,
-        	InfoSource,
-        	TransactionNature,
-        	IsCreditor ,
-        	CompanyName,
-        	InterestRate,
-        	DateInterestRateUpdated ,
-        	ActualContractBalance,
-        	CurrentMonthInstalment,
-        	ExpectedNextPayment,
-        	InterestAmount,
-        	DateAmountUpdated,
-        	RemainingInstalments,
-        	IsCurrentlyPaying,
-        	DatePaymentsEnd
-        ))
-    cursor._connection.commit()
-    cursor.close()
-    connection.close()
+    
+    try:
+        cursor.execute(query, (
+            	TransactionName,
+            	InfoSource,
+            	TransactionNature,
+            	IsCreditor ,
+            	CompanyName,
+            	InterestRate,
+            	DateInterestRateUpdated ,
+            	ActualContractBalance,
+            	CurrentMonthInstalment,
+            	ExpectedNextPayment,
+            	InterestAmount,
+            	DateAmountUpdated,
+            	RemainingInstalments,
+            	IsCurrentlyPaying,
+            	DatePaymentsEnd
+            ))
+        cursor._connection.commit()
+    finally:
+        cursor.close()

@@ -471,11 +471,12 @@ class WriteTransactionSource(discord.ui.View):
 async def on_ready():
     status_channel = bot.get_channel(s.STATUS_ID)
     StatusInsert()    #INSERT current status log
-    restart_time, err = RestartErrorCheck()    #Check previous status log
-    if err:
-        await status_channel.send(f"Bot failed to restart\nLast restart time {restart_time}")
-    else:
-        await status_channel.send(f"Bot restarted on {restart_time}")
+    #restart_time, err = RestartErrorCheck()    #Check previous status log
+    #if err:
+    #    await status_channel.send(f"Bot failed to restart\nLast restart time {restart_time}")
+    #else:
+    #    await status_channel.send(f"Bot restarted on {restart_time}")
+    await status_channel.send(f"Bot restarted on {datetime.datetime.now()}")
 
     channel = bot.get_channel(s.GIT_ID)
     dateTime = datetime.datetime.now()

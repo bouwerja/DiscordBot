@@ -1,6 +1,7 @@
 import mysql.connector
 import settings as s
 import datetime
+from datetime import timedelta
 import calendar
 import yfinance as yf
 
@@ -76,7 +77,7 @@ def GoldPriceTracking():
     
     return price_dict
 
-def StatusInsert():
+def StatusInsert(online_status = 'ONLINE'):
     cursor, err = dm_ConnectionStatus()
     if err:
         print("failed to connect to DataBase")
@@ -86,5 +87,31 @@ def StatusInsert():
         INSERT INTO ForFun.AppStatusLog (LogStatus, AppName)
         VALUES (%s, %s);
     """
-    cursor.execute(insert_query, ('ONLINE', 'DISCORD'))
+    cursor.execute(insert_query, (online_status, 'DISCORD'))
     cursor._connection.commit()
+
+def RestartErrorCheck():
+    cursor, err = dm_ConnectionStatus()
+    if err:
+        print(f"Discrod Bot missed restart at {datetime.datetime.now()}")
+        return 
+    
+    select_query = """
+        SELECT DateRecordCreated FROM ForFun.AppStatusLog
+        WHERE AppName = 'DISCORD'
+        ORDER BY LogID DESC
+        LIMIT 2
+    """
+    cursor.execute(select_query)
+    raw_result = cursor.fetchall()
+    latest_status_time = raw_result[0][0]
+    prev_status_time = raw_result[1][0]
+    restart_timeDelta = latest_status_time - prev_status_time
+    restart_timeDelta_float = float(restart_timeDelta.total_seconds())
+
+    hasError = False    # Variable to indicate error
+    if restart_timeDelta_float > 3600:
+        hasError = True
+        StatusInsert('MISSED RESTART')
+
+    return latest_status_time, hasError

@@ -19,6 +19,11 @@ def dm_ConnectionStatus(close=False):
         return None, True
 
 def ReacurringUpdates():
+    cursor, err = dm_ConnectionStatus()
+    if err:
+        print("Failed to connect to database from DM")
+        return
+
     year = datetime.datetime.now().year
     month = datetime.datetime.now().month
     last_day = calendar.monthrange(year, month)[1]
@@ -26,40 +31,38 @@ def ReacurringUpdates():
     while date.weekday() > 4:
         date -= datetime.timedelta(days=1)
 
-    if date.day == datetime.datetime.now(): # Pay day
-        cursor, err = dm_ConnectionStatus()
-        if err:
-            print("Failed to connect to database from DM")
-            return
+    if date.day == last_day: # Pay day
         
         income_query = """
-            SELECT SUM(CurrentMonthInstalment) FROM ForFun.TransactionSource ts 
-            WHERE TransactionNature = 'Income'
+            SELECT Amount FROM ForFun.Budgeting b
+            WHERE Description = 'Income';
         """
         balance_query = """
-            SELECT SUM(Balance) FROM ForFun.FinanceDetail fd
+            SELECT Balance FROM ForFun.FinanceDetail fd
+            ORDER BY FinID DESC
+            LIMIT 1;
         """
-        try:
-            cursor.execute(income_query)
-            income_fetch = cursor.fetchall()
-            cursor.execute(balance_query)
-            balance_fetch = cursor.fetchall()
-        except mysql.connector.Error as err:
-            return
+        cursor.execute(income_query)
+        income_fetch = cursor.fetchall()
+        cursor.execute(balance_query)
+        balance_fetch = cursor.fetchall()
         
         income_result = income_fetch[0][0]
         balance_result = balance_fetch[0][0]
         balance = float(income_result) + float(balance_result)
 
         insert_query = """
-            INSERT INTO ForFun.FinanceDetail (TransactionSourceID , TransactionReason, Balance, CreditorAmount, IsNecessity, PaidToName)
-            VALUES(9, 'Monthly Income', %s, %s, 1, %s);
+            INSERT INTO ForFun.FinanceDetail (BudgetID , TransactionReason, Balance, CreditorAmount, IsNecessity, Notes)
+            VALUES(9, 'Monthly Income', %s, %s, 1, 'Capital Legacy Solutions');
         """
-        try:
-            cursor.execute(insert_query, (balance, income_result, 'Capitec Amount'))
-            cursor._connection.commit()
-        finally:
-            cursor.close()
+        cursor.execute(insert_query, (balance, income_result))
+        cursor._connection.commit()
+
+    if date.day == datetime.datetime.strptime("1", "%d"): #First of month Expenses
+        pass
+
+    if date.day == last_day: #Savings notification
+        pass
         
 
 def GoldPriceTracking():

@@ -190,3 +190,50 @@ def update_TransactionSource(
         cursor._connection.commit()
     finally:
         cursor.close()
+
+def get_FinancialStatus():
+    cursor, err = connection_status()
+    if err:
+        print("Error connecting to the database")
+
+    try:
+        select_query = """
+            SELECT 
+                b.BudgetID, 
+                b.Description, 
+                b.Amount,
+                IFNULL(f.AmountSpent, 0) AS AmountSpent,
+                IFNULL(b.Amount - f.AmountSpent, b.Amount) AS AmountLeft
+            FROM ForFun.Budgeting b
+            LEFT JOIN (
+                SELECT
+                    fd.BudgetID,
+                    SUM(CASE 
+                        WHEN fd.BudgetID = 13 THEN fd.SavingsCreditAmount
+                        WHEN fd.BudgetID = 9 THEN fd.CreditorAmount
+                        ELSE fd.DebitorAmount
+                    END) AS AmountSpent
+                FROM ForFun.FinanceDetail fd 
+                WHERE fd.DateRecordCreated >= (
+                    SELECT MAX(DateRecordCreated)
+                    FROM ForFun.FinanceDetail
+                    WHERE BudgetID = 9
+                )
+                GROUP BY fd.BudgetID
+            ) AS f ON f.BudgetID = b.BudgetID
+            WHERE b.Active = 1
+                AND b.BudgetID <> 9
+            ORDER BY b.BudgetID ASC;
+        """
+        cursor.execute(select_query)
+        raw_result = cursor.fetchall()
+        result_dict = {}
+        for i in range(0, len(raw_result) - 1, 1):
+            result_dict[f"{raw_result[i][1]}"] = {
+                'Budget' : float(raw_result[i][2]),
+                'Spent' : float(raw_result[i][3]),
+                'Remaining' : float(raw_result[i][4])
+            }
+        return result_dict
+    finally:
+        cursor.close()

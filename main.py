@@ -3,7 +3,7 @@ from discord.ext import commands
 import settings as s
 import database as db
 import datetime
-from database_management import StatusInsert, RestartErrorCheck
+from database_management import StatusInsert
 
 intents = discord.Intents.default()
 intents.members = True
@@ -576,14 +576,20 @@ async def transact(ctx: commands.Context, args: str=None):
         view = FirstFinDropdown()
         await ctx.send("**FINANCE UPDATE IN PROGRESS!**", view=view)
 
-@bot.command(name="status", alias=["st"])
+@bot.command(name="status", alias=["fs"])
 async def status(ctx):
     channel_id = ctx.channel.id
     finance_channel = s.FINANCE_ID
 
     if channel_id == finance_channel:
-        #CHECK FINANCE STATUS IN FINANCE CHANNEL
-        await ctx.send("This is the finance channel")
+        result_dict = db.get_FinancialStatus()
+        response = (
+            f"📊 Financial Status!\n"
+        )
+        for key, value in result_dict.items():
+            append_string = f"**{key}:** Budget: R{value['Budget']} Spent: R{value['Spent']} **Remaining: R{value['Remaining']}**\n"
+            response = response + append_string
+        await ctx.send(response)
 
 @bot.command(name="save", alias=["s"])
 async def savings(ctx):

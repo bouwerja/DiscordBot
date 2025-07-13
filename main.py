@@ -596,13 +596,6 @@ async def savings(ctx):
     view=SavingsDropdown()
     await ctx.send("***SAVINGS UPDATE IN PROGRESS!**", view=view)
 
-@bot.command(name="help")
-async def help(ctx):
-    await ctx.send("""
-!transact -> !t: Record Transaction
-!status -> !fs: Gives summary of budget allocations
-""")
-
 if __name__ == "__main__":
     token=s.DISCORD_BOT_TOKEN
     bot.run(str(token))

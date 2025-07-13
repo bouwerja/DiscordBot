@@ -43,7 +43,7 @@ def get_DiscordSources():
     trans_sources = get_TransactionSource()
     source_dict = {}
     for i in range(0, len(trans_sources), 1):
-        source_dict[f'{trans_sources[i][0]}'] = trans_sources[i][1]
+        source_dict[f'{trans_sources[i][0]}'] = trans_sources[i][2]
         
     return source_dict
 

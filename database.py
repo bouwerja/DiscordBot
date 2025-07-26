@@ -237,3 +237,20 @@ def get_FinancialStatus():
         return result_dict
     finally:
         cursor.close()
+
+def insert_quote(author, quote, datecreated):
+    cursor, err = connection_status()
+    if err:
+        print("Error connecting to the database")
+
+    try:
+        insert_query = """
+INSERT INTO ForFun.Quotes (Author, Quote, DateRecordCreated)
+VALUES (%s, %s, %s)
+"""
+        
+        cursor.execute(insert_query, (author, quote, datecreated))
+        cursor._connection.commit()
+    
+    finally:
+        cursor.close()

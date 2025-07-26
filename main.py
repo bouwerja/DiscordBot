@@ -493,7 +493,7 @@ async def on_ready():
     dateQuoteCreated = quote_otd['DateRecordCreated']
 
 
-    await channel.send(f"{quote_text}\n    -{quote_author}")
+    await genreal_channel.send(f"{quote_text}\n    -{quote_author}")
     db.insert_quote(quote_author, quote_text, dateQuoteCreated)
 
 @bot.event 

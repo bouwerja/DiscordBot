@@ -4,6 +4,7 @@ import settings as s
 import database as db
 import datetime
 from database_management import StatusInsert
+from quotes import get_Quote
 
 intents = discord.Intents.default()
 intents.members = True
@@ -484,6 +485,16 @@ async def on_ready():
         await channel.send(f"git pulled on {dateTime}")
     else:
         print("Cannot find the channel")
+
+    genreal_channel = bot.get_channel(s.GENERAL_ID)
+    quote_otd = get_Quote()
+    quote_author = quote_otd['Author']
+    quote_text = quote_otd['Quote']
+    dateQuoteCreated = quote_otd['DateRecordCreated']
+
+
+    await channel.send(f"{quote_text}\n    -{quote_author}")
+    db.insert_quote(quote_author, quote_text, dateQuoteCreated)
 
 @bot.event 
 async def on_message(message):

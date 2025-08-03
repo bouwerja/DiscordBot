@@ -4,6 +4,7 @@ import settings as s
 import database as db
 import datetime
 from database_management import StatusInsert
+from database_management import ReacurringUpdates
 from quotes import get_Quote
 
 intents = discord.Intents.default()
@@ -470,17 +471,17 @@ class WriteTransactionSource(discord.ui.View):
 
 @bot.event
 async def on_ready():
+    dateTime = datetime.datetime.now()
+
     status_channel = bot.get_channel(s.STATUS_ID)
-    StatusInsert()    #INSERT current status log
-    #restart_time, err = RestartErrorCheck()    #Check previous status log
-    #if err:
-    #    await status_channel.send(f"Bot failed to restart\nLast restart time {restart_time}")
-    #else:
-    #    await status_channel.send(f"Bot restarted on {restart_time}")
-    await status_channel.send(f"Bot restarted on {datetime.datetime.now()}")
+    StatusInsert()
+    await status_channel.send(f"Bot restarted on {dateTime}")
+
+    if dateTime >= datetime.datetime(dateTime.year, dateTime.month, dateTime.day, 0, 0, 0) and dateTime <= datetime.datetime(dateTime.year, dateTime.month, dateTime.day, 0, 1, 0):
+        ReacurringUpdates()
+        await status_channel.send(f"Reacurring Expenses has been updated")
 
     channel = bot.get_channel(s.GIT_ID)
-    dateTime = datetime.datetime.now()
     if channel:
         await channel.send(f"git pulled on {dateTime}")
     else:

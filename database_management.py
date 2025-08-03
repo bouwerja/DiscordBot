@@ -4,6 +4,7 @@ import datetime
 from datetime import timedelta
 import calendar
 import yfinance as yf
+from dateutil.relativedelta import relativedelta
 
 connection = mysql.connector.connect(
         host = s.DATABASE_HOSTNAME, 
@@ -31,38 +32,80 @@ def ReacurringUpdates():
     while date.weekday() > 4:
         date -= datetime.timedelta(days=1)
 
-    if date.day == last_day: # Pay day
-        
-        income_query = """
-            SELECT Amount FROM ForFun.Budgeting b
-            WHERE Description = 'Income';
-        """
-        balance_query = """
-            SELECT Balance FROM ForFun.FinanceDetail fd
-            ORDER BY FinID DESC
-            LIMIT 1;
-        """
-        cursor.execute(income_query)
-        income_fetch = cursor.fetchall()
-        cursor.execute(balance_query)
-        balance_fetch = cursor.fetchall()
-        
-        income_result = income_fetch[0][0]
-        balance_result = balance_fetch[0][0]
-        balance = float(income_result) + float(balance_result)
+    try:
+        date = date.strftime("%Y-%m-%d")
+        current_date = datetime.datetime.now()
+        current_date = current_date.strftime("%Y-%m-%d")
+        if date == current_date: # Pay day
 
-        insert_query = """
-            INSERT INTO ForFun.FinanceDetail (BudgetID , TransactionReason, Balance, CreditorAmount, IsNecessity, Notes)
-            VALUES(9, 'Monthly Income', %s, %s, 1, 'Capital Legacy Solutions');
-        """
-        cursor.execute(insert_query, (balance, income_result))
-        cursor._connection.commit()
+            income_query = """
+                SELECT Amount FROM ForFun.Budgeting b
+                WHERE Description = 'Income';
+            """
+            balance_query = """
+                SELECT Balance FROM ForFun.FinanceDetail fd
+                ORDER BY FinID DESC
+                LIMIT 1;
+            """
+            cursor.execute(income_query)
+            income_fetch = cursor.fetchall()
+            cursor.execute(balance_query)
+            balance_fetch = cursor.fetchall()
 
-    if date.day == datetime.datetime.strptime("1", "%d"): #First of month Expenses
-        pass
+            income_result = income_fetch[0][0]
+            balance_result = balance_fetch[0][0]
+            balance = float(income_result) + float(balance_result)
 
-    if date.day == last_day: #Savings notification
-        pass
+            insert_query = """
+                INSERT INTO ForFun.FinanceDetail (BudgetID , TransactionReason, Balance, CreditorAmount, IsNecessity, Notes)
+                VALUES(9, 'Monthly Income', %s, %s, 1, 'Capital Legacy Solutions');
+            """
+            cursor.execute(insert_query, (balance, income_result))
+            cursor._connection.commit()
+
+        current_datetime = datetime.datetime.now()
+        new_month = current_datetime + relativedelta(months=1, day=1)
+        current_datetime = current_datetime.strftime("%Y-%m-%d")
+        new_month = new_month.strftime("%Y-%m-%d")
+        if current_datetime == new_month: #First of month Expenses and Savings Transfer
+            expenses_query = """SELECT BudgetID, Description, Amount FROM ForFun.Budgeting WHERE IsMonthly = 1 AND Active = 1"""
+            balance_query = """
+                SELECT Balance FROM ForFun.FinanceDetail fd
+                ORDER BY FinID DESC
+                LIMIT 1;
+            """
+            cursor.execute(expenses_query)
+            expenses = cursor.fetchall()
+            cursor.execute(balance_query)
+            balance = cursor.fetchall()
+            val_balance = float(balance[0][0])
+
+            insert_dict = {}
+            for i in range(0, len(expenses), 1):
+                amount = float(expenses[i][2])
+                new_balance = val_balance - amount
+                insert_dict[f"{expenses[i][0]}"] = {
+                    "Description" : expenses[i][1], 
+                    "Amount" : amount,
+                    "Balance" : new_balance
+                }
+                val_balance = new_balance
+
+            insert_query = """
+                INSERT INTO ForFun.FinanceDetail (BudgetID , TransactionReason, Balance, CreditorAmount, IsNecessity, Notes)
+                VALUES(%s, %s, %s, %s, 1, 'Monthly Expenses');
+            """
+            for key, value in insert_dict.items():
+                budgetID = key
+                transReason = value["Description"]
+                credAmount = value["Amount"]
+                balance = value["Balance"]
+
+                cursor.execute(insert_query, (budgetID, transReason, balance, credAmount))
+                cursor._connection.commit()
+
+    finally:
+        cursor.close()
         
 
 def GoldPriceTracking():
@@ -134,3 +177,11 @@ def RestartErrorCheck():
     
     finally:
         cursor.close()
+
+
+
+
+"""REACURING EVENTS MANAGEMENT"""
+
+def mth_Income():
+    return "Just something"

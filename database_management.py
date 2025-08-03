@@ -92,7 +92,7 @@ def ReacurringUpdates():
                 val_balance = new_balance
 
             insert_query = """
-                INSERT INTO ForFun.FinanceDetail (BudgetID , TransactionReason, Balance, CreditorAmount, IsNecessity, Notes)
+                INSERT INTO ForFun.FinanceDetail (BudgetID , TransactionReason, Balance, DebitorAmount, IsNecessity, Notes)
                 VALUES(%s, %s, %s, %s, 1, 'Monthly Expenses');
             """
             for key, value in insert_dict.items():

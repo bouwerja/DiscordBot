@@ -410,13 +410,6 @@ class WriteTransactionSource(discord.ui.View):
                 ephemeral=True
             )
 
-"""WORKINGS FOR FINANCE STATUS CHECKING"""
-
-#START HERE
-
-
-
-
 """WORKINGS FOR HABIT TRACKING"""
 
 #START HERE

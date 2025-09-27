@@ -1,4 +1,4 @@
 .env
 test.py
 __pycache__
-# credentials.json
+credentials.json

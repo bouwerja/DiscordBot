@@ -1,52 +1,104 @@
-import os
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+import imaplib
+import email
+from email.header import decode_header
+import base64
+import re
+from datetime import datetime
+import mysql.connector as mysql
+import settings as s
 
-# If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+# --- IMAP (Gmail) Connection ---
+imap_host = "imap.gmail.com"
+imap_user = s.IMAP_USER
+imap_pass = s.IMAP_PASS
 
+email_body = ""
 
-def main():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+try:
+    mail = imaplib.IMAP4_SSL(imap_host)
+    mail.login(imap_user, imap_pass)
+    mail.select("inbox")
+
+    status, search_data = mail.search(None, 'FROM "no-reply@discovery.bank"')
+
+    if status != "OK" or not search_data[0]:
+        print("No Transaction Emails")
+        emailID, subject, from_email, Emaildate, fullbody = None, None, None, None, None
+    else:
+        email_ids = search_data[0].split()
+        latest_email_id = email_ids[-1]  # last one
+
+        status, msg_data = mail.fetch(latest_email_id, "(RFC822)")
+        raw_msg = msg_data[0][1]
+
+        msg = email.message_from_bytes(raw_msg)
+
+        # Extract headers
+        subject, encoding = decode_header(msg["Subject"])[0]
+        if isinstance(subject, bytes):
+            subject = subject.decode(encoding if encoding else "utf-8")
+
+        from_email = msg.get("From")
+        date_tuple = email.utils.parsedate_tz(msg.get("Date"))
+        if date_tuple:
+            Emaildate = datetime.fromtimestamp(
+                email.utils.mktime_tz(date_tuple)
+            ).strftime("%Y-%m-%d %H:%M:%S")
+
+        emailID = latest_email_id.decode()
+
+        # Extract body
+        fullbody = ""
+        if msg.is_multipart():
+            for part in msg.walk():
+                content_type = part.get_content_type()
+                if content_type == "text/html":
+                    body = part.get_payload(decode=True).decode(errors="ignore")
+                    paragraphs = re.findall(
+                        r"<p>(.*?)</p>", body, re.IGNORECASE | re.DOTALL
+                    )
+                    for match in paragraphs:
+                        cleaned = re.sub(r"<.*?>", "", match)
+                        fullbody += cleaned + "\n"
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
+            body = msg.get_payload(decode=True).decode(errors="ignore")
+            paragraphs = re.findall(r"<p>(.*?)</p>", body, re.IGNORECASE | re.DOTALL)
+            for match in paragraphs:
+                cleaned = re.sub(r"<.*?>", "", match)
+                fullbody += cleaned + "\n"
 
-    try:
-        # Call the Gmail API
-        service = build("gmail", "v1", credentials=creds)
-        results = service.users().labels().list(userId="me").execute()
-        labels = results.get("labels", [])
+        email_body = fullbody
 
-        if not labels:
-            print("No labels found.")
-            return
-        print("Labels:")
-        for label in labels:
-            print(label["name"])
+    mail.logout()
 
-    except HttpError as error:
-        # TODO(developer) - Handle errors from gmail API.
-        print(f"An error occurred: {error}")
+except Exception as e:
+    print(f"IMAP error: {e}")
+    exit()
+
+print(email_body)
 
 
-if __name__ == "__main__":
-    main()
+# --- SQL Server Connection ---
+
+# try:
+#     conn = mysql.connect(
+#         host=s.DATABASE_HOSTNAME,
+#         user=s.ACTIVE_USERNAME,
+#         password=s.ACTIVE_USER_PWD,
+#         database=s.ACTIVE_DATABASE,
+#     )
+#     cursor = conn.cursor()
+#
+#     if emailID and subject:
+#         sql = """INSERT INTO MailImport
+#                  (EmailID, VendorID, DateRecordCreated, EmailFrom, EmailSubject, EmailBody)
+#                  VALUES (?, ?, ?, ?, ?, ?)"""
+#         params = (emailID, 1, Emaildate, from_email, subject, fullbody)
+#         cursor.execute(sql, params)
+#         conn.commit()
+#
+#     cursor.close()
+#     conn.close()
+#
+# except Exception as e:
+#     print(f"SQL Server Error: {e}")

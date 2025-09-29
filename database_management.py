@@ -36,10 +36,8 @@ def ReacurringUpdates():
         date -= datetime.timedelta(days=1)
 
     try:
-        date = date.strftime("%Y-%m-%d")
         current_date = datetime.datetime.now()
-        current_date = current_date.strftime("%Y-%m-%d")
-        if date == current_date:  # Pay day
+        if current_datetime.day == 1 and current_date.time().hour <= 1:
             income_query = """
                 SELECT Amount FROM ForFun.Budgeting b
                 WHERE Description = 'Income';
@@ -65,10 +63,6 @@ def ReacurringUpdates():
             cursor.execute(insert_query, (balance, income_result))
             cursor._connection.commit()
 
-        current_datetime = datetime.datetime.now()
-        if (
-            current_datetime.day == 1 and current_date.time().hour <= 1
-        ):  # First of month Expenses and Savings Transfer
             expenses_query = """SELECT BudgetID, Description, Amount FROM ForFun.Budgeting WHERE IsMonthly = 1 AND Active = 1"""
             balance_query = """
                 SELECT Balance FROM ForFun.FinanceDetail fd
@@ -182,11 +176,4 @@ def RestartErrorCheck():
 
     finally:
         cursor.close()
-
-
-"""REACURING EVENTS MANAGEMENT"""
-
-
-def mth_Income():
-    return "Just something"
 

@@ -7,17 +7,20 @@ import yfinance as yf
 from dateutil.relativedelta import relativedelta
 
 connection = mysql.connector.connect(
-        host = s.DATABASE_HOSTNAME, 
-        user = s.ACTIVE_USERNAME,
-        password = s.ACTIVE_USER_PWD,
-        database = s.ACTIVE_DATABASE
-        )
+    host=s.DATABASE_HOSTNAME,
+    user=s.ACTIVE_USERNAME,
+    password=s.ACTIVE_USER_PWD,
+    database=s.ACTIVE_DATABASE,
+)
+
+
 def dm_ConnectionStatus(close=False):
     if connection.is_connected():
         mysql_cursor = connection.cursor()
         return mysql_cursor, False
     else:
         return None, True
+
 
 def ReacurringUpdates():
     cursor, err = dm_ConnectionStatus()
@@ -36,8 +39,7 @@ def ReacurringUpdates():
         date = date.strftime("%Y-%m-%d")
         current_date = datetime.datetime.now()
         current_date = current_date.strftime("%Y-%m-%d")
-        if date == current_date: # Pay day
-
+        if date == current_date:  # Pay day
             income_query = """
                 SELECT Amount FROM ForFun.Budgeting b
                 WHERE Description = 'Income';
@@ -64,10 +66,7 @@ def ReacurringUpdates():
             cursor._connection.commit()
 
         current_datetime = datetime.datetime.now()
-        new_month = current_datetime + relativedelta(months=1, day=1)
-        current_datetime = current_datetime.strftime("%Y-%m-%d")
-        new_month = new_month.strftime("%Y-%m-%d")
-        if current_datetime == new_month: #First of month Expenses and Savings Transfer
+        if current_datetime.day == 1:  # First of month Expenses and Savings Transfer
             expenses_query = """SELECT BudgetID, Description, Amount FROM ForFun.Budgeting WHERE IsMonthly = 1 AND Active = 1"""
             balance_query = """
                 SELECT Balance FROM ForFun.FinanceDetail fd
@@ -85,9 +84,9 @@ def ReacurringUpdates():
                 amount = float(expenses[i][2])
                 new_balance = val_balance - amount
                 insert_dict[f"{expenses[i][0]}"] = {
-                    "Description" : expenses[i][1], 
-                    "Amount" : amount,
-                    "Balance" : new_balance
+                    "Description": expenses[i][1],
+                    "Amount": amount,
+                    "Balance": new_balance,
                 }
                 val_balance = new_balance
 
@@ -101,23 +100,25 @@ def ReacurringUpdates():
                 credAmount = value["Amount"]
                 balance = value["Balance"]
 
-                cursor.execute(insert_query, (budgetID, transReason, balance, credAmount))
+                cursor.execute(
+                    insert_query, (budgetID, transReason, balance, credAmount)
+                )
                 cursor._connection.commit()
 
     finally:
         cursor.close()
-        
+
 
 def GoldPriceTracking():
     data = yf.Ticker("GLD.JO")
-    twoYearPrice = data.history(interval='1d', period='2Y')
+    twoYearPrice = data.history(interval="1d", period="2Y")
     price_dict = {}
-    
+
     for row in range(len(twoYearPrice)):
         date = twoYearPrice.index[row]
-        price_dict[f'{date.date()}'] = {
-            'ClosePrice': int(twoYearPrice['Close'][row]) / 100,
-            'Volume': int(twoYearPrice['Volume'][row])
+        price_dict[f"{date.date()}"] = {
+            "ClosePrice": int(twoYearPrice["Close"][row]) / 100,
+            "Volume": int(twoYearPrice["Volume"][row]),
         }
 
     select_query = """
@@ -128,31 +129,33 @@ def GoldPriceTracking():
         INSERT INTO ForFun.GoldPrice (Date, ClosePrice, Volume, PriceChange, TwelveMonthMovingAverage, CMA, SeasonalWeighting , LinearRegression, PointForecast, Error)
         VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    
+
     return price_dict
 
-def StatusInsert(online_status = 'ONLINE'):
+
+def StatusInsert(online_status="ONLINE"):
     cursor, err = dm_ConnectionStatus()
     if err:
         print("failed to connect to DataBase")
         return
-    
+
     insert_query = """
         INSERT INTO ForFun.AppStatusLog (LogStatus, AppName)
         VALUES (%s, %s);
     """
     try:
-        cursor.execute(insert_query, (online_status, 'DISCORD'))
+        cursor.execute(insert_query, (online_status, "DISCORD"))
         cursor._connection.commit()
     finally:
         cursor.close()
+
 
 def RestartErrorCheck():
     cursor, err = dm_ConnectionStatus()
     if err:
         print(f"Discrod Bot missed restart at {datetime.datetime.now()}")
-        return 
-    
+        return
+
     select_query = """
         SELECT DateRecordCreated FROM ForFun.AppStatusLog
         WHERE AppName = 'DISCORD'
@@ -168,20 +171,20 @@ def RestartErrorCheck():
         restart_timeDelta = latest_status_time - prev_status_time
         restart_timeDelta_float = float(restart_timeDelta.total_seconds())
 
-        hasError = False    # Variable to indicate error
+        hasError = False  # Variable to indicate error
         if restart_timeDelta_float > 3600:
             hasError = True
-            StatusInsert('MISSED RESTART')
+            StatusInsert("MISSED RESTART")
 
         return hasError
-    
+
     finally:
         cursor.close()
 
 
-
-
 """REACURING EVENTS MANAGEMENT"""
+
 
 def mth_Income():
     return "Just something"
+

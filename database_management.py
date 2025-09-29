@@ -66,7 +66,9 @@ def ReacurringUpdates():
             cursor._connection.commit()
 
         current_datetime = datetime.datetime.now()
-        if current_datetime.day == 1:  # First of month Expenses and Savings Transfer
+        if (
+            current_datetime.day == 1 and current_date.time().hour <= 1
+        ):  # First of month Expenses and Savings Transfer
             expenses_query = """SELECT BudgetID, Description, Amount FROM ForFun.Budgeting WHERE IsMonthly = 1 AND Active = 1"""
             balance_query = """
                 SELECT Balance FROM ForFun.FinanceDetail fd
